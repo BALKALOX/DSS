@@ -1,0 +1,37 @@
+<!-- templates/decision.html -->
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Деталі Рішення</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded shadow">
+        <h1 class="text-2xl font-bold mb-4">
+            Рішення #<span th:text="${decision.id}">ID</span>
+        </h1>
+
+        <div class="space-y-2 text-gray-800">
+            <p><strong>Тип:</strong> <span th:text="${decision.decisionType}"></span></p>
+            <p><strong>Опис:</strong> <span th:text="${decision.description}"></span></p>
+            <p><strong>Створено:</strong> <span th:text="${decision.created}"></span></p>
+            <p><strong>Користувач:</strong> <span th:text="${decision.user.name}"></span></p>
+            <p th:each="role : ${decision.user.getRoles()}">
+                <strong th:text="${role.name}"></strong>
+            </p>
+
+        </div>
+
+        <<div class="mt-6 flex space-x-4">
+            <a th:href="@{/decisions}" class="text-blue-600 hover:underline">← Назад до списку</a>
+            <a th:href="@{'/decisions/'+${decision.id}+'/edit'}" class="text-blue-600 hover:underline">Редагувати</a>
+
+            <form th:action="@{'/decisions/' + ${decision.id}+'/delete'}" method="post" class="inline">
+                <input type="hidden" name="_method" value="delete"/>
+                <button type="submit" class="text-red-600 hover:underline">Видалити</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
