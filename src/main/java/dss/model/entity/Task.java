@@ -60,4 +60,7 @@ public class Task {
     @JoinColumn(name = "chosen_decision_id")
     private Decision chosenDecision;
 
+    @OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TaskParameter> taskParameters;
+
 }

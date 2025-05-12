@@ -3,8 +3,12 @@ package dss.controller.mvc;
 
 import dss.dto.UserDto;
 import dss.model.entity.User;
+import dss.repository.RoleRepository;
 import dss.service.UserService;
 import jakarta.validation.Valid;
+import lombok.AllArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -13,16 +17,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
+@AllArgsConstructor
 public class AuthController {
 
     private UserService userService;
+    private RoleRepository roleRepository;
 
-    public AuthController(UserService userService) {
-        this.userService = userService;
-    }
 
     // handler method to handle home page request
     @GetMapping("/index")
@@ -71,7 +76,13 @@ public class AuthController {
     // handler method to handle list of users
     @GetMapping("/users")
     public String users(Model model){
-        model.addAttribute("users", userService.getAllUsers());
+        List<User> users = userService.getAllUsers()
+                .stream()
+                .sorted(Comparator.comparing(User::getId).reversed())
+                .collect(Collectors.toList());
+
+        model.addAttribute("users", users);
+        model.addAttribute("roles",roleRepository.findAll());
         return "users";
     }
 

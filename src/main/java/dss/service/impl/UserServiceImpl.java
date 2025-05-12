@@ -8,9 +8,13 @@ import dss.model.entity.User;
 import dss.repository.RoleRepository;
 import dss.repository.UserRepository;
 import dss.service.UserService;
+import jakarta.transaction.Transactional;
+import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -89,7 +93,35 @@ public class UserServiceImpl implements UserService {
         return null;
     }
 
-    public void deleteUserById(Long id){
+    @Override
+    @Transactional
+    public void deleteById(Long id){
+        
         userRepository.deleteById(id);
+    }
+
+    @Override
+    public User changeRole(Long userId, String role){
+        roleRepository.findAll().forEach(r -> System.out.println("ROLE IN DB: " + r.getName()));
+
+        System.out.println(role);
+        var user = userRepository.findById(userId).get();
+
+        var newRole = roleRepository.findByName(role);
+        System.out.println(newRole);
+        List<Role> editable = new ArrayList<>(user.getRoles());
+        editable.clear();
+        editable.add(newRole);
+        user.setRoles(editable);
+
+
+        return userRepository.save(user);
+    }
+
+
+
+    @Bean
+    public static PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }

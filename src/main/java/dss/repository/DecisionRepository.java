@@ -3,7 +3,7 @@ package dss.repository;
 import dss.model.entity.Decision;
 import dss.model.entity.Task;
 import dss.model.entity.User;
-import dss.model.entity.enums.DecisionType;
+import dss.model.entity.enums.DecisionCategory;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -22,5 +22,7 @@ public interface DecisionRepository extends JpaRepository<Decision, Long> {
     void deleteById(long id);
     List<Decision> findAllByTask(Task task);
     List<Decision> findAllByTask(Task task, Pageable pageable);
+
+    Decision findByIdAndUser(Long id, User user);
 
 }

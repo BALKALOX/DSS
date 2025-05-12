@@ -1,5 +1,6 @@
 package dss.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Null;
@@ -31,6 +32,7 @@ public class Scenario {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "decision_id", nullable = false)
+    @JsonBackReference
     private Decision decision;
 
     @ManyToOne

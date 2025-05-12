@@ -85,7 +85,6 @@ public class ScenarioServiceImpl implements ScenarioService {
             scenario.setTitle(scenarioDto.getTitle());
             scenario.setDescription(scenarioDto.getDescription());
             scenario.setPossibility(scenarioDto.getPossibility());
-            scenario.setDecision(decisionRepository.findById(scenarioDto.getDecisionId()).get());
             scenario.setUser(userService.findUserByEmail(authentication.getName()));
             scenarios.add(scenario);
         }

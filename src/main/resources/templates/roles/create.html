@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Управління Ролями</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="p-4">
+<header class="fixed top-0 left-0 w-full z-50 bg-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+        <a href="/tasks" class="text-2xl font-bold text-blue-600">DSS Система</a>
+
+        <nav class="flex items-center gap-6 text-gray-700 font-semibold">
+            <a href="/tasks" class="hover:text-blue-600">Задачі</a>
+            <a href="/decisions" class="hover:text-blue-600">Рішення</a>
+            <a href="/roles" id="role-link" class="hover:text-blue-600 hidden">Ролі</a>
+            <a href="/users" id="users-link" class="hover:text-blue-600 hidden">Користувачі</a>
+            <a href="/login" id="login-link" class="hover:text-blue-600">Вхід</a>
+            <a href="#" id="logout-link" class="hover:text-red-600 hidden">Вийти</a>
+        </nav>
+    </div>
+</header>
+<div class="container" id="admin-role-section" style="display: none;">
+    <h2 class="mb-4" id="form-title">Створити нову роль</h2>
+
+    <form id="role-form">
+        <div class="mb-3">
+            <label for="name" class="form-label">Назва ролі</label>
+            <input type="text" class="form-control" id="name" name="name" placeholder="ROLE_USER" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="submit-button">Створити</button>
+        <a href="/roles" class="btn btn-secondary">Назад</a>
+    </form>
+</div>
+
+<script>
+    const token = localStorage.getItem('token');
+    const urlParts = window.location.pathname.split('/');
+    const isEdit = urlParts.includes('edit');
+    const roleId = isEdit ? urlParts[urlParts.length - 2] : null;
+
+    fetch('/api/v1/auth/user', {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+        .then(res => res.json())
+        .then(user => {
+            const roles = user.roles.map(r => r.name);
+            if (!roles.includes('ROLE_ADMIN')) {
+                alert('У вас немає прав доступу до цієї сторінки.');
+                window.location.href = '/';
+            } else {
+                document.getElementById('admin-role-section').style.display = 'block';
+                if (isEdit && roleId) {
+                    document.getElementById('form-title').textContent = 'Редагувати роль';
+                    document.getElementById('submit-button').textContent = 'Оновити';
+
+                    fetch(`/api/v1/roles/${roleId}`, {
+                        method: 'GET',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                        .then(res => res.json())
+                        .then(role => {
+                            document.getElementById('name').value = role.name;
+                        });
+                }
+            }
+        })
+        .catch(() => window.location.href = '/');
+
+    document.getElementById('role-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const roleName = document.getElementById('name').value.trim();
+        if (!roleName) return;
+
+        fetch(`/api/v1/roles${isEdit ? '/' + roleId : ''}`, {
+            method: isEdit ? 'PUT' : 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: roleName
+        })
+            .then(res => {
+                if (res.ok) {
+                    alert('Роль збережено!');
+                    window.location.href = '/users';
+                } else {
+                    return res.text().then(text => { throw new Error(text); });
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Помилка при збереженні ролі');
+            });
+    });
+</script>
+<script>
+    const token = localStorage.getItem('token');
+
+    if (token) {
+        document.getElementById('nav-login')?.classList.add('hidden');
+        document.getElementById('nav-logout')?.classList.remove('hidden');
+
+        fetch('/api/v1/auth/user', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+            .then(res => res.ok ? res.json() : Promise.reject())
+            .then(user => {
+                const roles = user.roles.map(r => r.name);
+                if (roles.includes('ROLE_ADMIN')) {
+                    document.getElementById('nav-role')?.classList.remove('hidden');
+                    document.getElementById('nav-users')?.classList.remove('hidden');
+                }
+            })
+            .catch(() => {
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+            });
+    }
+
+    document.getElementById('nav-logout')?.addEventListener('click', () => {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+    });
+</script>
+</body>
+</html>

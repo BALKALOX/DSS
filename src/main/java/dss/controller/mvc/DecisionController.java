@@ -1,10 +1,13 @@
 package dss.controller.mvc;
 
 import dss.dto.DecisionDto;
-import dss.dto.ScenarioDto;
 import dss.model.entity.Decision;
+import dss.model.entity.User;
 import dss.service.DecisionService;
+import dss.service.TaskService;
+import dss.service.UserService;
 import lombok.AllArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -16,48 +19,37 @@ import org.springframework.web.bind.annotation.*;
 public class DecisionController {
 
     private final DecisionService decisionService;
+    private final TaskService taskService;
+    private final UserService userService;
 
     @GetMapping
     public String getAllDecisions(Model model) {
         model.addAttribute("decisions",decisionService.getAllDecisions());
-        return "decisions";
+        return "decisions/decisions";
     }
     @GetMapping("/{id}")
-    public String getDecisionById(@PathVariable Long id, Model model) {
-        model.addAttribute("decision",decisionService.getDecisionById(id));
-        return "decision";
+    public String viewDecision(@PathVariable Long id, Model model) {
+        Decision decision = decisionService.getDecisionById(id);
+
+        model.addAttribute("decision", decision);
+
+        return "decisions/decision";
     }
+
 
     @GetMapping("/create")
-    public String createDecision(Model model) {
-        model.addAttribute("decision", new DecisionDto());
-        return "createDecision";
+    public String createDecision(@RequestParam("taskId") Long taskId, Model model) {
+        DecisionDto decisionDto = new DecisionDto();
+        decisionDto.setTaskId(taskId);
+        model.addAttribute("task",taskService.getTaskById(taskId));
+        model.addAttribute("decision", decisionDto);
+        return "decisions/createDecision";
     }
-
-//    @PostMapping
-//    public String createDecision(Model model, DecisionDto decisionDto,
-//                                 List<ScenarioDto> scenariosDto,
-//                                 Authentication authentication) {
-//        var createdDecision = decisionService.createDecision(decisionDto, scenariosDto , authentication);
-//
-//        return "redirect:/decisions/" + createdDecision.getId();
-//    }
 
     @GetMapping("/{id}/edit")
     public String editDecision(@PathVariable Long id, Model model) {
         model.addAttribute("decision",decisionService.getDecisionById(id));
-        return "editDecision";
+        return "decisions/editDecision";
     }
 
-//    @PostMapping("/{id}")
-//    public String editDecision(@PathVariable Long id, Model model, DecisionDto decisionDto) {
-//        var updatedDecision = decisionService.updateDecision(id, decisionDto);
-//        return "redirect:/decisions/" + updatedDecision.getId();
-//    }
-
-//    @PostMapping("/{id}/delete")
-//    public String deleteDecision(@PathVariable Long id) {
-//        decisionService.deleteDecisionById(id);
-//        return "redirect:/decisions";
-//    }
 }

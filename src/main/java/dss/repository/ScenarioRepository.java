@@ -3,7 +3,7 @@ package dss.repository;
 import dss.model.entity.Decision;
 import dss.model.entity.Scenario;
 import dss.model.entity.User;
-import dss.model.entity.enums.DecisionType;
+import dss.model.entity.enums.DecisionCategory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -17,7 +17,7 @@ public interface ScenarioRepository extends JpaRepository<Scenario, Long> {
     List<Scenario> findAll();
     List<Scenario> findAllByDecision(Decision decision);
     List<Scenario> findAllByUser(User user);
-    List<Scenario> findAllByDecisionDecisionType(DecisionType decisionType);
+    List<Scenario> findAllByDecisionDecisionCategory(DecisionCategory decisionCategory);
     Scenario save(Scenario scenario);
     void deleteById(long id);
     void deleteByTitle(String title);

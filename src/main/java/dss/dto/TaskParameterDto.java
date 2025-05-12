@@ -1,10 +1,10 @@
 package dss.dto;
 
+import dss.model.entity.enums.OptimizationDirection;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
-import org.springframework.lang.Nullable;
 
 @Data
 @Builder
@@ -13,7 +13,8 @@ public class TaskParameterDto {
     private String name;
     @NotNull
     private double weight;
+    @NotNull
     private String unit;
     @NotNull
-    private Long taskId;
+    private OptimizationDirection optimizationDirection;
 }

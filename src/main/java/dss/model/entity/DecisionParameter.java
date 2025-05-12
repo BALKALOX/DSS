@@ -1,5 +1,6 @@
 package dss.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,6 +21,7 @@ public class DecisionParameter {
 
     @ManyToOne
     @JoinColumn(name = "decision_id", nullable = false)
+    @JsonBackReference
     private Decision decision;
 
     @ManyToOne

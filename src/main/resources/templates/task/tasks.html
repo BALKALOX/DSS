@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Список задач</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+
+<header class="fixed top-0 left-0 w-full z-50 bg-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+        <a href="/tasks" class="text-2xl font-bold text-blue-600">DSS Система</a>
+
+        <nav class="flex items-center gap-6 text-gray-700 font-semibold">
+            <a href="/tasks" class="hover:text-blue-600">Задачі</a>
+            <a href="/decisions" class="hover:text-blue-600">Рішення</a>
+            <a href="/roles" id="role-link" class="hover:text-blue-600 hidden">Ролі</a>
+            <a href="/users" id="users-link" class="hover:text-blue-600 hidden">Користувачі</a>
+            <a href="/login" id="login-link" class="hover:text-blue-600">Вхід</a>
+            <a href="/logout" id="logout-link" class="hover:text-red-600 hidden">Вийти</a>
+        </nav>
+    </div>
+</header>
+
+<div class="max-w-7xl mx-auto pt-24">
+    <h1 class="text-3xl font-bold mb-8 text-center">Список задач</h1>
+
+    <!-- Форма фільтрації -->
+    <form method="get" th:action="@{/tasks}" class="mb-6 flex flex-wrap justify-center gap-4">
+        <select name="category" class="border rounded px-4 py-2">
+            <option value="">Усі категорії</option>
+            <option value="ENERGETIC" th:selected="${param.category == 'ENERGETIC'}">Енергетика</option>
+            <option value="ECONOMY" th:selected="${param.category == 'ECONOMY'}">Економіка</option>
+            <option value="ECOLOGY" th:selected="${param.category == 'ECOLOGY'}">Екологія</option>
+        </select>
+        <select name="status" class="border rounded px-4 py-2">
+            <option value="">Усі статуси</option>
+            <option value="NEW" th:selected="${param.status == 'NEW'}">Нова</option>
+            <option value="SOLVED" th:selected="${param.status == 'SOLVED'}">Вирішена</option>
+            <option value="EMERGENCY" th:selected="${param.status == 'EMERGENCY'}">Термінова</option>
+        </select>
+        <input type="text" name="user" placeholder="Пошук за іменем" class="border rounded px-4 py-2" th:value="${param.user}">
+        <select name="sort" class="border rounded px-4 py-2">
+            <option value="">Сортування</option>
+            <option value="created-desc" th:selected="${param.sort == 'created-desc'}">Найновіші</option>
+            <option value="created-asc" th:selected="${param.sort == 'created-asc'}">Найстаріші</option>
+        </select>
+        <button type="submit" class="bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2 rounded">Застосувати</button>
+    </form>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="task-grid">
+        <div th:each="task : ${tasks}"
+             class="task-card bg-white rounded-lg shadow p-6 hover:shadow-lg transition"
+             data-task-id="[[${task.id}]]"
+             th:attr="data-task-id=${task.id}"
+             data-category="[[${task.category}]]"
+             data-status="[[${task.status}]]"
+             data-user="[[${task.user.name.toLowerCase()}]]">
+
+            <h2 class="text-2xl font-semibold mb-2" th:text="${task.title}"></h2>
+
+            <p class="text-gray-600 mb-1">
+                <strong>Категорія:</strong> <span th:text="${task.category.label}"></span>
+            </p>
+
+            <p class="text-gray-600 mb-1">
+                <strong>Статус:</strong>
+                <span th:text="${task.status.label}"
+                      th:classappend="
+                        ${task.status.name() == 'NEW'} ? 'text-blue-600' :
+                        (${task.status.name() == 'IN_PROGRESS'} ? 'text-yellow-500' :
+                        (${task.status.name() == 'SOLVED'} ? 'text-green-600' :
+                        (${task.status.name() == 'EMERGENCY'} ? 'text-red-600' : 'text-gray-600')))">
+                </span>
+            </p>
+
+            <p class="text-gray-600 mb-1">
+                <strong>Створено:</strong> <span th:text="${#temporals.format(task.created, 'yyyy-MM-dd HH:mm')}"></span>
+            </p>
+
+            <p class="text-gray-600 mb-4">
+                <strong>Користувач:</strong> <span th:text="${task.user.name}"></span> (<span th:text="${task.user.roles[0].ukrName}"></span>)
+            </p>
+
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold mb-2 text-gray-800">Параметри задачі:</h3>
+                <button type="button" class="toggle-parameters bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold py-1 px-4 rounded mb-2">
+                    Показати параметри
+                </button>
+                <ul class="space-y-2 hidden parameters-list">
+                    <li th:each="parameter : ${task.taskParameters}" class="bg-gray-100 p-3 rounded-lg">
+                        <p class="text-gray-700"><strong>Назва:</strong> <span th:text="${parameter.name}"></span></p>
+                        <p class="text-gray-700"><strong>Вага:</strong> <span th:text="${parameter.weight}"></span></p>
+                        <p class="text-gray-700"><strong>Одиниця виміру:</strong> <span th:text="${parameter.unit}"></span></p>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="mt-4">
+                <a th:href="@{'/tasks/' + ${task.id}}"
+                   class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition">
+                    Переглянути задачу
+                </a>
+            </div>
+            <div class="buttons-container mt-2 flex gap-2"></div>
+        </div>
+    </div>
+</div>
+<script th:src="@{/js/tasks.js}"></script>
+<script>
+    const token = localStorage.getItem('token');
+
+    if (token) {
+        document.getElementById('nav-login')?.classList.add('hidden');
+        document.getElementById('nav-logout')?.classList.remove('hidden');
+
+        fetch('/api/v1/auth/user', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+            .then(res => res.ok ? res.json() : Promise.reject())
+            .then(user => {
+                const roles = user.roles.map(r => r.name);
+                if (roles.includes('ROLE_ADMIN')) {
+                    document.getElementById('nav-role')?.classList.remove('hidden');
+                    document.getElementById('nav-users')?.classList.remove('hidden');
+                }
+            })
+            .catch(() => {
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+            });
+    }
+
+    document.getElementById('nav-logout')?.addEventListener('click', () => {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+    });
+
+    // Фільтрація
+    document.addEventListener('DOMContentLoaded', () => {
+        const categoryFilter = document.getElementById('filter-category');
+        const statusFilter = document.getElementById('filter-status');
+        const userFilter = document.getElementById('filter-user');
+
+        function filterTasks() {
+            const category = categoryFilter.value;
+            const status = statusFilter.value;
+            const user = userFilter.value.toLowerCase();
+
+            document.querySelectorAll('.task-card').forEach(card => {
+                const matchesCategory = !category || card.getAttribute('data-category') === category;
+                const matchesStatus = !status || card.getAttribute('data-status') === status;
+                const matchesUser = !user || card.getAttribute('data-user').includes(user);
+
+                card.style.display = matchesCategory && matchesStatus && matchesUser ? 'block' : 'none';
+            });
+        }
+
+        categoryFilter.addEventListener('change', filterTasks);
+        statusFilter.addEventListener('change', filterTasks);
+        userFilter.addEventListener('input', filterTasks);
+
+        filterTasks();
+    });
+</script>
+</body>
+</html>

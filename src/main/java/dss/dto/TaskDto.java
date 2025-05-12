@@ -7,6 +7,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Builder
 public class TaskDto {
@@ -20,5 +22,7 @@ public class TaskDto {
     private TaskCategory category;
 
     private TaskStatus status;
+
+    private List<TaskParameterDto> taskParameters;
 
 }

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="uk" xmlns:th="http://www.thymeleaf.org" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>Перегляд задачі</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+<header class="fixed top-0 left-0 w-full z-50 bg-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+        <a href="/tasks" class="text-2xl font-bold text-blue-600">DSS Система</a>
+
+        <nav class="flex items-center gap-6 text-gray-700 font-semibold">
+            <a href="/tasks" class="hover:text-blue-600">Задачі</a>
+            <a href="/decisions" class="hover:text-blue-600">Рішення</a>
+            <a href="/roles" id="role-link" class="hover:text-blue-600 hidden">Ролі</a>
+            <a href="/users" id="users-link" class="hover:text-blue-600 hidden">Користувачі</a>
+            <a href="/login" id="login-link" class="hover:text-blue-600">Вхід</a>
+            <a href="#" id="logout-link" class="hover:text-red-600 hidden">Вийти</a>
+        </nav>
+    </div>
+</header>
+
+<div class="max-w-6xl mx-auto pt-24">
+    <h1 class="text-3xl font-bold mb-4">Задача: <span th:text="${task.title}" class="text-blue-600"></span></h1>
+    <p class="mb-2 text-gray-700"><strong>Опис:</strong> <span th:text="${task.description}"></span></p>
+    <p class="mb-2 text-gray-700"><strong>Категорія:</strong>
+        <span class="task-category" th:text="${task.category.label}"></span>
+    </p>
+    <p class="mb-6 text-gray-700"><strong>Статус:</strong> <span th:text="${task.status.label}"></span></p>
+
+    <h2 class="text-2xl font-semibold mb-4">Параметри задачі</h2>
+    <table id="task-parameters-table" class="w-full border text-sm mb-8">
+        <thead class="bg-gray-200">
+        <tr>
+            <th class="p-2 border">Назва</th>
+            <th class="p-2 border">Вага</th>
+            <th class="p-2 border">Одиниця</th>
+            <th class="p-2 border">Напрямок оптимізації</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="parameter : ${task.taskParameters}">
+            <td class="p-2 border" th:text="${parameter.name}"></td>
+            <td class="p-2 border" th:text="${parameter.weight}"></td>
+            <td class="p-2 border" th:text="${parameter.unit}"></td>
+            <td class="p-2 border" th:text="${parameter.optimizationDirection.label}"></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div id="create-decision-container" class="text-center mt-6">
+
+    </div>
+
+    <!-- 📘 Кнопки для відкриття інформаційних модалок -->
+    <div class="fixed bottom-6 right-6 z-40 space-y-2">
+        <button onclick="openAHPHelpModal()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded shadow-lg">ℹ️ AHP</button>
+        <button onclick="openTopsisHelpModal()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded shadow-lg">ℹ️ TOPSIS</button>
+        <button onclick="openElectreHelpModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded shadow-lg">ℹ️ ELECTRE</button>
+    </div>
+
+    <h2 class="text-2xl font-semibold mb-4">Рішення</h2>
+    <div class="space-y-6">
+        <div th:each="decision : ${task.decisions}"
+             class="bg-white p-4 rounded-lg shadow"
+             style="display: block"
+             th:attr="data-decision-id=${decision.id}, data-decision-user-id=${decision.user.id}"
+             >
+
+        <a th:href="@{'/decisions/'+${decision.id}}" class="text-xl font-bold mb-2 " th:text="${decision.title}"></a>
+            <p class="text-gray-600 mb-2">
+                <strong>Опис:</strong> <span th:text="${decision.description}"></span> </br>
+                <strong>Тип:</strong> <span th:text="${decision.task.category.label}"></span> |
+                <strong>Статус:</strong> <span th:text="${decision.decisionStatus.ukrName}"></span>
+            </p>
+            <p class="text-gray-700 mb-4">
+                <strong>Автор:</strong> <span th:text="${decision.user.name}"></span> (<span th:text="${decision.user.roles[0].ukrName}"></span>)
+            </p>
+
+            <h4 class="font-semibold">Сценарії:</h4>
+            <ul class="list-disc ml-6 mb-4" th:if="${decision.scenarios != null}">
+                <li th:each="scenario : ${decision.scenarios}">
+                    <span th:text="${scenario.title}"></span> –
+                    <span th:text="${scenario.description}"></span>
+                    (<em>Ймовірність: <span th:text="${scenario.possibility * 100}"></span>%</em>)
+                </li>
+            </ul>
+
+            <h4 class="font-semibold">Параметри рішення:</h4>
+            <table class="w-full border text-sm mt-2">
+                <thead class="bg-gray-100">
+                <tr>
+                    <th class="p-2 border">Параметр</th>
+                    <th class="p-2 border">Значення</th>
+                    <th class="p-2 border">Коментар</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="parameter : ${decision.decisionParameters}">
+                    <td class="p-2 border" th:text="${parameter.taskParameter.name}"></td>
+                    <td class="p-2 border" th:text="${parameter.value + ' ' + parameter.taskParameter.unit}"></td>
+                    <td class="p-2 border" th:text="${parameter.comment}"></td>\
+                </tr>
+                </tbody>
+            </table>
+            <p class="text-gray-600 mb-2">
+                <strong>Рейтинг:</strong>
+                <span th:text="${#numbers.formatDecimal(decision.getRate(), 1, 2) + '/10'}"></span>
+                <br>
+                <strong>Кількість оцінок:</strong> <span th:text="${decision.getExpertEvaluations().size()}"></span>
+
+            </p>
+        </d>
+    </div>
+</div>
+
+    <!-- 🔍 Інформаційна модалка про методи -->
+    <div id="method-info-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white p-8 rounded-lg shadow-lg max-w-3xl w-full">
+            <h2 class="text-2xl font-bold mb-4 text-center">Інформація про методи</h2>
+            <div class="space-y-4 text-sm text-gray-700">
+                <div>
+                    <h3 class="font-semibold text-lg text-indigo-700">AHP (Analytic Hierarchy Process)</h3>
+                    <p>Метод ієрархічного аналізу дозволяє порівнювати критерії і альтернативи в парах, використовуючи матрицю парних порівнянь. Він корисний, коли є багато суб'єктивних оцінок або нечітких даних.</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg text-purple-700">TOPSIS (Technique for Order Preference by Similarity to Ideal Solution)</h3>
+                    <p>Метод, що вибирає альтернативу, яка є найближчою до ідеальної (найкращої) і найдальшою від найгіршої. Добре працює при чітких числових критеріях і великій кількості параметрів.</p>
+                </div>
+                <div>
+                    <h3 class="font-semibold text-lg text-emerald-700">ELECTRE (ELimination Et Choix Traduisant la REalité)</h3>
+                    <p>Метод переваг, який базується на порівнянні альтернатив і встановленні порогів згоди/незгоди. Застосовується, коли важко об'єднати всі критерії в одне число, і потрібен компромісний вибір.</p>
+                </div>
+            </div>
+            <div class="flex justify-center mt-6">
+                <button onclick="document.getElementById('method-info-modal').classList.add('hidden')"
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded">Закрити</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📘 Кнопка відкриття інформаційної модалки -->
+    <div class="fixed bottom-20 right-6 z-40">
+        <button onclick="document.getElementById('method-info-modal').classList.remove('hidden')"
+                class="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded shadow-lg">
+            ℹ️ Про методи
+        </button>
+    </div>
+
+    <!-- Модальне вікно -->
+<div id="ahp-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-4xl">
+        <h2 class="text-2xl font-bold mb-6 text-center">Введіть матрицю парних порівнянь</h2>
+
+        <div id="ahp-table-container" class="overflow-x-auto">
+            <!-- Тут JS-ом вставиться таблиця -->
+        </div>
+
+        <div class="flex justify-center gap-4 mt-8">
+            <button id="submit-ahp" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded">
+                Обчислити
+            </button>
+            <button id="cancel-ahp" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded">
+                Скасувати
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Модалка ELECTRE -->
+<div id="electre-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
+        <h2 class="text-xl font-bold mb-4 text-center">Пороги ELECTRE</h2>
+        <label class="block mb-2">
+            Поріг C:
+            <input type="number" id="c-threshold" class="w-full border p-2 rounded" step="0.01" value="0.5">
+        </label>
+        <label class="block mb-4">
+            Поріг D:
+            <input type="number" id="d-threshold" class="w-full border p-2 rounded" step="0.01" value="0.5">
+        </label>
+        <div class="flex justify-end gap-4">
+            <button onclick="submitElectre()" class="bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded">OK</button>
+            <button onclick="closeElectreModal()" class="bg-gray-400 hover:bg-gray-500 text-white py-2 px-4 rounded">Скасувати</button>
+        </div>
+    </div>
+</div>
+
+<!-- Модальне вікно для оцінювання -->
+    <div id="rate-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white p-6 rounded shadow-lg w-full max-w-md">
+            <h2 class="text-xl font-bold mb-4 text-center">Оцінити рішення</h2>
+            <label class="block mb-2">Оцінка (0-10):</label>
+            <input type="number" id="rate-score" class="w-full border p-2 rounded mb-4" min="0" max="10" step="0.1">
+            <label class="block mb-2">Коментар (необов'язково):</label>
+            <textarea id="rate-comment" class="w-full border p-2 rounded mb-4"></textarea>
+            <div class="flex justify-end gap-4">
+                <button onclick="submitRate()" class="bg-green-500 text-white py-2 px-4 rounded">Надіслати</button>
+                <button onclick="closeRateModal()" class="bg-gray-400 text-white py-2 px-4 rounded">Скасувати</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- AHP Help Modal -->
+<div id="ahp-help-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
+        <h2 class="text-xl font-bold mb-4 text-center">Метод AHP (Аналітичний ієрархічний процес)</h2>
+        <p class="mb-4 text-gray-700">
+            Метод AHP використовує матрицю парних порівнянь для визначення відносної важливості критеріїв. Для кожної пари критеріїв потрібно ввести, наскільки один критерій важливіший за інший за шкалою від 1 до 9:
+        </p>
+        <ul class="list-disc list-inside text-gray-700 mb-4">
+            <li><strong>1</strong> — однакова важливість</li>
+            <li><strong>3</strong> — помірна перевага одного над іншим</li>
+            <li><strong>5</strong> — суттєва перевага</li>
+            <li><strong>7</strong> — явна перевага</li>
+            <li><strong>9</strong> — абсолютна перевага</li>
+            <li><strong>2,4,6,8</strong> — проміжні значення</li>
+        </ul>
+        <p class="text-gray-700">
+            Значення навпроти іншої клітинки автоматично заповнюється як обернене. Наприклад, якщо ви вказали "5", то у відповідній комірці буде "1/5".
+        </p>
+        <div class="flex justify-end">
+            <button onclick="document.getElementById('ahp-help-modal').classList.add('hidden')" class="bg-blue-500 text-white px-4 py-2 rounded">Закрити</button>
+        </div>
+    </div>
+</div>
+
+<!-- ELECTRE Help Modal -->
+<div id="electre-help-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-lg shadow-lg max-w-xl w-full">
+        <h2 class="text-xl font-bold mb-4 text-center">Метод ELECTRE</h2>
+        <p class="mb-4 text-gray-700">
+            Метод ELECTRE використовує два пороги для оцінки рішень:
+        </p>
+        <ul class="list-disc list-inside text-gray-700 mb-4">
+            <li><strong>Поріг узгодження (C):</strong> показує, наскільки одна альтернатива краща за іншу за всіма критеріями загалом.</li>
+            <li><strong>Поріг неузгодження (D):</strong> визначає, чи є суттєві критерії, де альтернатива гірша за іншу.</li>
+        </ul>
+        <p class="mb-4 text-gray-700">
+            Якщо альтернатива A має високий C і низький D порівняно з B, то A переважає B. Рекомендується встановити C та D між 0.4 і 0.7 залежно від жорсткості відбору.
+        </p>
+        <div class="flex justify-end">
+            <button onclick="document.getElementById('electre-help-modal').classList.add('hidden')" class="bg-blue-500 text-white px-4 py-2 rounded">Закрити</button>
+        </div>
+    </div>
+</div>
+
+<!-- TOPSIS Help Modal -->
+<div id="topsis-help-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full">
+        <h2 class="text-xl font-bold mb-4 text-center">Метод TOPSIS</h2>
+        <p class="mb-4 text-gray-700">
+            Метод TOPSIS (Technique for Order Preference by Similarity to Ideal Solution) вибирає найкращу альтернативу на основі відстані до ідеального рішення.
+        </p>
+        <ul class="list-disc list-inside text-gray-700 mb-4">
+            <li>Рішення оцінюються за всіма критеріями та нормалізуються.</li>
+            <li>Розраховується відстань до умовного ідеального та антиидеального рішення.</li>
+            <li>Чим ближче альтернатива до ідеалу і далі від антиидеалу — тим вона краща.</li>
+        </ul>
+        <p class="text-gray-700">TOPSIS найкраще працює при кількісних критеріях та великій кількості альтернатив.</p>
+        <div class="flex justify-end">
+            <button onclick="document.getElementById('topsis-help-modal').classList.add('hidden')" class="bg-blue-500 text-white px-4 py-2 rounded">Закрити</button>
+        </div>
+    </div>
+</div>
+<script th:src="@{/js/taskPage.js}"></script>
+<script th:src="@{/js/evaluation.js}"></script>
+    <script>
+        const token = localStorage.getItem('token');
+
+        if (token) {
+            document.getElementById('nav-login')?.classList.add('hidden');
+            document.getElementById('nav-logout')?.classList.remove('hidden');
+
+            fetch('/api/v1/auth/user', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+                .then(res => res.ok ? res.json() : Promise.reject())
+                .then(user => {
+                    const roles = user.roles.map(r => r.name);
+                    if (roles.includes('ROLE_ADMIN')) {
+                        document.getElementById('nav-role')?.classList.remove('hidden');
+                        document.getElementById('nav-users')?.classList.remove('hidden');
+                    }
+                })
+                .catch(() => {
+                    localStorage.removeItem('token');
+                    window.location.href = '/login';
+                });
+        }
+
+        document.getElementById('nav-logout')?.addEventListener('click', () => {
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+        });
+    </script>
+
+<script>
+    function openAHPHelpModal() {
+        const modal = document.getElementById('ahp-help-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function openElectreHelpModal() {
+        const modal = document.getElementById('electre-help-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function openTopsisHelpModal() {
+        const modal = document.getElementById('topsis-help-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+</script>
+</body>
+</html>

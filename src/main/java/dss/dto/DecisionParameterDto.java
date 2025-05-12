@@ -17,8 +17,5 @@ public class DecisionParameterDto {
     private String comment;
 
     @NotNull
-    private Long decisionId;
-
-    @NotNull
     private Long taskParameterId;
 }

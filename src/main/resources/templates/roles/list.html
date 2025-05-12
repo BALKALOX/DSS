@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Управління ролями</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6 min-h-screen">
+<div class="max-w-4xl mx-auto bg-white p-8 rounded shadow space-y-6">
+    <h1 class="text-2xl font-bold mb-4 text-center">Список ролей</h1>
+
+    <form id="create-role-form" class="flex gap-4 mb-6">
+        <input type="text" id="role-name" placeholder="Нова роль (наприклад: ROLE_USER)"
+               class="flex-1 border px-4 py-2 rounded" required>
+        <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+            ➕ Додати
+        </button>
+    </form>
+
+    <ul id="role-list" class="space-y-3">
+        <!-- Динамічний список ролей -->
+    </ul>
+</div>
+
+<script>
+    const token = localStorage.getItem('token');
+
+    function fetchRoles() {
+        fetch('/api/v1/roles', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+            .then(res => res.json())
+            .then(data => {
+                const list = document.getElementById('role-list');
+                list.innerHTML = '';
+                data.forEach(role => {
+                    const li = document.createElement('li');
+                    li.className = 'flex items-center justify-between bg-gray-50 p-4 rounded shadow-sm';
+                    li.innerHTML = `
+                    <span class="font-semibold">${role.name}</span>
+                    <div class="space-x-2">
+                        <button class="edit-btn bg-yellow-500 text-white px-3 py-1 rounded" data-id="${role.id}" data-name="${role.name}">Змінити</button>
+                        <button class="delete-btn bg-red-500 text-white px-3 py-1 rounded" data-id="${role.id}">Видалити</button>
+                    </div>
+                `;
+                    list.appendChild(li);
+                });
+                attachHandlers();
+            });
+    }
+
+    function attachHandlers() {
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.onclick = () => {
+                const id = btn.getAttribute('data-id');
+                if (confirm('Видалити роль?')) {
+                    fetch(`/api/v1/roles/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }).then(() => fetchRoles());
+                }
+            };
+        });
+
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.onclick = () => {
+                const id = btn.getAttribute('data-id');
+                const currentName = btn.getAttribute('data-name');
+                const newName = prompt('Нове імʼя ролі:', currentName);
+                if (newName && newName !== currentName) {
+                    fetch(`/api/v1/roles/${id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: newName
+                    }).then(() => fetchRoles());
+                }
+            };
+        });
+    }
+
+    document.getElementById('create-role-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const name = document.getElementById('role-name').value.trim();
+        if (!name) return;
+
+        fetch('/api/v1/roles', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: name
+        }).then(() => {
+            document.getElementById('role-name').value = '';
+            fetchRoles();
+        });
+    });
+
+    fetchRoles();
+</script>
+</body>
+</html>

@@ -1,11 +1,14 @@
 package dss.service;
 
 import dss.dto.TaskDto;
+import dss.dto.TaskParameterDto;
+import dss.model.entity.Decision;
 import dss.model.entity.Task;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 public interface TaskService {
@@ -17,4 +20,20 @@ public interface TaskService {
     Task createTask(TaskDto taskDto, Authentication authentication);
 
     void deleteTaskById(Long id);
+
+    Task addTaskParameterToTask(Long taskId, List<TaskParameterDto> taskParameterDtoList);
+
+    Task updateTask(Long id, TaskDto taskDto);
+
+    Map<String, Double> findBestDecisionAHP(Long taskId, double[][] comparisonMatrix);
+
+    Map<String, Double> findBestDecisionTOPSIS(Long taskId);
+
+//    Map<String, Double> findBestDecisionELECTRE(Long taskId);
+
+    Map<String, Double> findBestDecisionELECTRE(Long taskId, double cThreshold, double dThreshold);
+
+    Task setSolution(Long taskId, Long decisionId);
+
+    String recommendBestMethodForTask(Long taskId);
 }

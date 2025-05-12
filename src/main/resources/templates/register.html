@@ -9,23 +9,25 @@
           rel="stylesheet"
           integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
           crossorigin="anonymous">
+
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" th:href="@{/index}">Registration and Login System</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" th:href="@{/login}">Login</a>
-                </li>
-            </ul>
-        </div>
+<header class="fixed top-0 left-0 w-full z-50 bg-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+        <a href="/tasks" class="text-2xl font-bold text-blue-600">DSS Система</a>
+
+        <nav class="flex items-center gap-6 text-gray-700 font-semibold">
+            <a href="/tasks" class="hover:text-blue-600">Задачі</a>
+            <a href="/decisions" class="hover:text-blue-600">Рішення</a>
+            <a href="/roles" id="role-link" class="hover:text-blue-600 hidden">Ролі</a>
+            <a href="/users" id="users-link" class="hover:text-blue-600 hidden">Користувачі</a>
+            <a href="/login" id="login-link" class="hover:text-blue-600">Вхід</a>
+            <a href="#" id="logout-link" class="hover:text-red-600 hidden">Вийти</a>
+        </nav>
     </div>
-</nav>
+</header>
+
 <br /><br /><br />
 <div class="container">
     <div class="row col-md-8 offset-md-2">
@@ -54,9 +56,11 @@
                                 placeholder="Enter first name"
                                 th:field="*{firstName}"
                                 type="text"
+                                required
                         />
                         <p th:errors = "*{firstName}" class="text-danger"
                            th:if="${#fields.hasErrors('firstName')}"></p>
+
                     </div>
 
                     <div class="form-group mb-3">
@@ -68,6 +72,7 @@
                                 placeholder="Enter last name"
                                 th:field="*{lastName}"
                                 type="text"
+                                required
                         />
                         <p th:errors = "*{lastName}" class="text-danger"
                            th:if="${#fields.hasErrors('lastName')}"></p>
@@ -82,6 +87,7 @@
                                 placeholder="Enter email address"
                                 th:field="*{email}"
                                 type="email"
+                                required
                         />
                         <p th:errors = "*{email}" class="text-danger"
                            th:if="${#fields.hasErrors('email')}"></p>
@@ -96,6 +102,7 @@
                                 placeholder="Enter phone number"
                                 th:field="*{phone_number}"
                                 type="tel"
+                                required
                         />
                         <p th:errors = "*{phone_number}" class="text-danger"
                            th:if="${#fields.hasErrors('phone_number')}"></p>
@@ -109,6 +116,7 @@
                                 placeholder="Enter password"
                                 th:field="*{password}"
                                 type="password"
+                                required
                         />
                         <p th:errors = "*{password}" class="text-danger"
                            th:if="${#fields.hasErrors('password')}"></p>
@@ -122,5 +130,34 @@
         </div>
     </div>
 </div>
+<script>
+    const token = localStorage.getItem('token');
+
+    if (token) {
+        document.getElementById('nav-login')?.classList.add('hidden');
+        document.getElementById('nav-logout')?.classList.remove('hidden');
+
+        fetch('/api/v1/auth/user', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+            .then(res => res.ok ? res.json() : Promise.reject())
+            .then(user => {
+                const roles = user.roles.map(r => r.name);
+                if (roles.includes('ROLE_ADMIN')) {
+                    document.getElementById('nav-role')?.classList.remove('hidden');
+                    document.getElementById('nav-users')?.classList.remove('hidden');
+                }
+            })
+            .catch(() => {
+                localStorage.removeItem('token');
+                window.location.href = '/login';
+            });
+    }
+
+    document.getElementById('nav-logout')?.addEventListener('click', () => {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+    });
+</script>
 </body>
 </html>

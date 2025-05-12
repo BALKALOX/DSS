@@ -1,57 +1,167 @@
 <!DOCTYPE html>
-<html lang="en"
-      xmlns:th="http://www.thymeleaf.org"
->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Registration and Login System</title>
+    <title>Управління користувачами</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
-          rel="stylesheet"
-          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
-          crossorigin="anonymous">
+          rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" th:href="@{/index}">Registration and Login System</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" th:href="@{/logout}">Logout</a>
-                </li>
-            </ul>
-        </div>
+<header class="bg-white shadow-md">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+        <a href="/tasks" class="text-2xl font-bold text-blue-600">DSS Система</a>
+
+        <nav class="flex items-center gap-6 text-gray-700 font-semibold">
+            <a href="/tasks" class="hover:text-blue-600">Задачі</a>
+            <a href="/decisions" class="hover:text-blue-600">Рішення</a>
+            <a href="/roles" id="role-link" class="hover:text-blue-600 hidden">Ролі</a>
+            <a href="/users" id="users-link" class="hover:text-blue-600 hidden">Користувачі</a>
+            <a href="/login" id="login-link" class="hover:text-blue-600">Вхід</a>
+            <a href="#" id="logout-link" class="hover:text-red-600 hidden">Вийти</a>
+        </nav>
     </div>
-</nav>
-<div class="container">
-    <div class="row col-md-10">
-        <h2>List of Registered Users</h2>
-    </div>
-    <table class="table table-bordered table-hover">
-        <thead class="table-dark">
+</header>
+
+<div class="container mt-4" id="admin-section" style="display: none;">
+    <h2 class="mb-4">Список зареєстрованих користувачів</h2>
+    <table class="table table-bordered table-hover align-middle">
+        <thead class="table-dark text-center">
         <tr>
             <th>ID</th>
-            <th>Name</th>
-            <th>Role</th>
+            <th>Ім'я</th>
+            <th>Роль</th>
             <th>Email</th>
-            <th>Phone number</th>
+            <th>Телефон</th>
+            <th>Оновити роль</th>
+            <th>Дія</th>
         </tr>
         </thead>
-        <tbody>
-        <tr th:each = "user : ${users}">
-            <td th:text = "${user.id}"></td>
-            <td th:text = "${user.name}"></td>
-            <td th:each="role : ${user.getRoles()}">
-                <span th:text="${role.name}"></span>
+        <tbody id="user-table-body">
+        <tr th:each="user : ${users}">
+            <td th:text="${user.id}" th:attr="data-user-id=${user.id}"></td>
+            <td th:text="${user.name}"></td>
+            <td>
+                <span th:each="role : ${user.roles}" th:text="${role.ukrName} + ' '"></span>
             </td>
-            <td th:text = "${user.email}"></td>
-            <td th:text = "${user.phone_number}"></td>
+            <td th:text="${user.email}"></td>
+            <td th:text="${user.phone_number}"></td>
+            <td>
+                <div class="d-flex gap-2 align-items-center">
+                    <select class="form-select form-select-sm role-select">
+                        <option th:each="role : ${roles}" th:value="${role.name}" th:text="${role.ukrName}"
+                                th:selected="${user.roles.contains(role)}"></option>
+                    </select>
+                    <button class="btn btn-sm btn-primary change-role-btn">Змінити</button>
+                </div>
+            </td>
+            <td>
+                <button class="btn btn-sm btn-danger delete-user-btn">Видалити</button>
+            </td>
         </tr>
         </tbody>
     </table>
 </div>
+
+<script>
+    const token = localStorage.getItem('token');
+
+    fetch('/api/v1/auth/user', {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+        .then(res => res.json())
+        .then(user => {
+            const roles = user.roles.map(r => r.name);
+            if (!roles.includes('ROLE_ADMIN')) {
+                alert("У вас немає прав для перегляду цієї сторінки");
+                window.location.href = '/';
+            } else {
+                document.getElementById('admin-section').style.display = 'block';
+                setupRoleChangeHandlers();
+            }
+        })
+        .catch(() => window.location.href = '/');
+
+    function setupRoleChangeHandlers() {
+        const rows = document.querySelectorAll('#user-table-body tr');
+        rows.forEach(row => {
+            const userId = parseInt(row.querySelector('[data-user-id]').getAttribute('data-user-id'));
+            const select = row.querySelector('.role-select');
+            const changeButton = row.querySelector('.change-role-btn');
+            const deleteButton = row.querySelector('.delete-user-btn');
+
+            changeButton.addEventListener('click', () => {
+                const selectedRole = select.value;
+                fetch(`/api/v1/users/${userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: selectedRole
+                })
+                    .then(res => {
+                        if (res.ok) {
+                            alert('Роль оновлено!');
+                            location.reload();
+                        } else {
+                            return res.text().then(text => { throw new Error(text); });
+                        }
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('Помилка при оновленні ролі');
+                    });
+            });
+
+            deleteButton.addEventListener('click', () => {
+                if (confirm('Ви впевнені, що хочете видалити цього користувача?')) {
+                    fetch(`/api/v1/users/${userId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    })
+                        .then(res => {
+                            if (res.ok) {
+                                alert('Користувача видалено!');
+                                location.reload();
+                            } else {
+                                return res.text().then(text => { throw new Error(text); });
+                            }
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            alert('Помилка при видаленні користувача');
+                        });
+                }
+            });
+        });
+    }
+</script>
+<script>
+    const token = localStorage.getItem('token');
+    if (token) {
+        document.getElementById('login-link').classList.add('hidden');
+        document.getElementById('logout-link').classList.remove('hidden');
+
+        fetch('/api/v1/auth/user', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+            .then(res => res.json())
+            .then(user => {
+                const roles = user.roles.map(r => r.name);
+                if (roles.includes('ROLE_ADMIN')) {
+                    document.getElementById('role-link').classList.remove('hidden');
+                    document.getElementById('users-link').classList.remove('hidden');
+                }
+            });
+    }
+
+    document.getElementById('logout-link')?.addEventListener('click', () => {
+        localStorage.removeItem('token');
+        window.location.href = '/login';
+    });
+</script>
 </body>
 </html>

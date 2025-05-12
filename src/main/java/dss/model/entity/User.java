@@ -1,5 +1,6 @@
 package dss.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -35,11 +36,17 @@ public class User
     @Column(nullable=false)
     private String password;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade=CascadeType.ALL)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name="users_roles",
-            joinColumns={@JoinColumn(name="USER_ID", referencedColumnName="ID")},
-            inverseJoinColumns={@JoinColumn(name="ROLE_ID", referencedColumnName="ID")})
+            name = "users_roles",
+            joinColumns = @JoinColumn(name = "USER_ID"),
+            inverseJoinColumns = @JoinColumn(name = "ROLE_ID")
+    )
     private List<Role> roles = new ArrayList<>();
+
+
+    @OneToMany(mappedBy = "expert", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<ExpertEvaluation> evaluations = new ArrayList<>();
 
 }
