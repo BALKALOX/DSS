@@ -6,6 +6,7 @@ import dss.model.entity.Decision;
 import dss.model.entity.Task;
 import dss.model.entity.TaskParameter;
 import dss.model.entity.enums.DecisionStatus;
+import dss.model.entity.enums.OptimizationDirection;
 import dss.model.entity.enums.TaskStatus;
 import dss.repository.DecisionRepository;
 import dss.repository.TaskRepository;
@@ -208,21 +209,27 @@ public class TaskServiceImpl implements TaskService {
 
         int numParams = task.getTaskParameters().size();
 
-        boolean hasWeights = task.getTaskParameters().stream()
-                .anyMatch(p -> false);
-
-        boolean hasDirections = task.getTaskParameters().stream()
-                .allMatch(p -> p.getOptimizationDirection() != null);
-
+        // Якщо менше або рівно 6 параметрів — AHP
         if (numParams <= 6) {
             return "AHP";
-        } else if (numParams >= 7 && hasWeights && hasDirections) {
-            return "TOPSIS";
-        } else if (hasWeights && hasDirections) {
-            return "ELECTRE";
-        } else {
-            return null;
         }
+
+        // Підрахунок напрямків оптимізації
+        long countMax = task.getTaskParameters().stream()
+                .filter(p -> p.getOptimizationDirection() == OptimizationDirection.MAXIMIZE)
+                .count();
+        long countMin = task.getTaskParameters().stream()
+                .filter(p -> p.getOptimizationDirection() == OptimizationDirection.MINIMIZE)
+                .count();
+
+        // Якщо всі напрямки однакові — ELECTRE
+        if (countMax == numParams || countMin == numParams) {
+            return "ELECTRE";
+        }
+
+        // Якщо напрямки різні — TOPSIS
+        return "TOPSIS";
     }
+
 
 }

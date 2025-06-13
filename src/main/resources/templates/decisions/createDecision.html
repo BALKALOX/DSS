@@ -36,7 +36,10 @@
                 <strong class="text-gray-900">Опис:</strong> <span id="task-description" th:text="${task.description}"></span>
             </p>
             <p class="text-lg text-gray-700">
-                <strong class="text-gray-900">Категорія:</strong> <span id="task-category" th:text="${task.category}"></span>
+                <strong class="text-gray-900">Категорія:</strong> <span id="task-category" th:text="${task.category.label}"></span>
+            </p>
+            <p class="text-lg text-gray-700">
+                <strong class="text-gray-900">Статус:</strong> <span id="task-category" th:text="${task.status.label}"></span>
             </p>
         </div>
 

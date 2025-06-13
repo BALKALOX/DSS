@@ -22,12 +22,13 @@ fetch('http://localhost:8080/api/v1/auth/user', {
     .then(user => {
         const userId = user.id;
         const userRole = user.roles[0].name;
-
+        console.log(userRole);
+        console.log(taskCategory);
         const isAnalyst = userRole === 'ANALYST';
         const roleMatchesCategory =
-            (taskCategory === 'ENERGETIC' && userRole === 'POWER_ENGINEER') ||
-            (taskCategory === 'ECONOMY' && userRole === 'ECONOMIST') ||
-            (taskCategory === 'ECOLOGY' && userRole === 'ECOLOGIST');
+            (taskCategory === 'Енергетика' && userRole === 'POWER_ENGINEER') ||
+            (taskCategory === 'Економіка' && userRole === 'ECONOMIST') ||
+            (taskCategory === 'Екологія' && userRole === 'ECOLOGIST');
 
         if (roleMatchesCategory) {
             const createButton = document.createElement('a');
