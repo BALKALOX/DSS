@@ -63,8 +63,15 @@ A web-based **Decision Support System** (DSS) for expert-driven decision making 
 ---
 
 ## 📸 Screenshots
+![image](https://github.com/user-attachments/assets/77a76851-4084-4356-92aa-894f83a67cb7)
 
-_Coming soon..._
+![image](https://github.com/user-attachments/assets/7e781688-441f-4738-9541-dd353085a5cb)
+
+![image](https://github.com/user-attachments/assets/680eb74a-c3bf-4d44-afbb-4c75eff7e22c)
+
+![image](https://github.com/user-attachments/assets/932d68da-5700-4316-b2ed-63896eaf7995)
+
+![image](https://github.com/user-attachments/assets/8099dc1a-f4b3-4aea-90fb-1497b56d686a)
 
 ---
 
