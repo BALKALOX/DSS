@@ -3,7 +3,6 @@
 [![Java](https://img.shields.io/badge/Java-17+-red.svg?style=flat&logo=java)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-brightgreen?style=flat&logo=spring)](https://spring.io/projects/spring-boot)
 [![MySQL](https://img.shields.io/badge/MySQL-8.x-blue?style=flat&logo=mysql)](https://www.mysql.com/)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 A web-based **Decision Support System** (DSS) for expert-driven decision making in multi-criteria environments. It supports monitoring and analysis across ecological, economic, energy, and legal domains, providing a platform for task creation, evaluation, and optimal decision selection using AHP, TOPSIS, and ELECTRE methods.
 
